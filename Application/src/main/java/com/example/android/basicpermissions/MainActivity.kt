@@ -65,6 +65,23 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         findViewById<Button>(R.id.button_open_camera).setOnClickListener {
             startCamera()
         }
+        //1
+        //checkSelfPermissionCompat(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+
+        //2
+        //shouldShowRequestPermissionRationaleCompat(Manifest.permission.CAMERA)
+
+        //3
+        //requestPermissionsCompat(arrayOf(Manifest.permission.CAMERA), PERMISSION_REQUEST_CAMERA)
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        //4
     }
 
     private fun startCamera() {
