@@ -20,7 +20,6 @@
     <string name="intro">This sample shows a basic implementation for requesting permissions at runtime.\nClick the button below to request the Camera permission and open a full-screen camera preview.</string>
     <string name="open_camera_preview">Open Camera Preview</string>
     <string name="app_name">RuntimePermissionsBasic</string>
-    <string name="Ok">Ok</string>
     <string name="intro_message"><![CDATA[
 This sample shows a basic implementation for requesting permissions at runtime. Click the button to
 request the Camera permission and open a full-screen camera preview.
