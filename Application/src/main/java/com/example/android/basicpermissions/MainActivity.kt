@@ -17,6 +17,7 @@
 package com.example.android.basicpermissions
 
 import android.Manifest
+import android.app.AlertDialog
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -24,14 +25,15 @@ import android.view.View
 import android.widget.Button
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.example.android.basicpermissions.camera.CameraPreviewActivity
 import com.example.android.basicpermissions.util.checkSelfPermissionCompat
 import com.example.android.basicpermissions.util.requestPermissionsCompat
-import com.example.android.basicpermissions.util.shouldShowRequestPermissionRationaleCompat
-import com.example.android.basicpermissions.util.showSnackbar
-import com.google.android.material.snackbar.Snackbar
 
 const val PERMISSION_REQUEST_CAMERA = 0
+const val MESSAGE_FOR_USER_ABOUT_PERMISSION_TO_CAMERA =
+    "Якщо ви не надасте доступ до камери, то Іванич не зарахує мені домашку.. \uD83D\uDE44"
+const val TITLE_FOR_USER_ABOUT_PERMISSION_TO_CAMERA = "Доступ до камери"
 
 /**
  * Launcher Activity that demonstrates the use of runtime permissions for Android M.
@@ -61,18 +63,20 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         setContentView(R.layout.activity_main)
         layout = findViewById(R.id.main_layout)
 
-        // Register a listener for the 'Show Camera Preview' button.
+        // Call the request to camera
+        requestCameraPermissions()
+
         findViewById<Button>(R.id.button_open_camera).setOnClickListener {
-            startCamera()
+            val checkPermissionStatus = checkSelfPermissionCompat(Manifest.permission.CAMERA)
+
+            if (checkPermissionStatus == PackageManager.PERMISSION_GRANTED) {
+                showCamera()
+            }
+
+            if (checkPermissionStatus == PackageManager.PERMISSION_DENIED) {
+                repeatMessageAccessCamera()
+            }
         }
-        //1
-        //checkSelfPermissionCompat(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
-
-        //2
-        //shouldShowRequestPermissionRationaleCompat(Manifest.permission.CAMERA)
-
-        //3
-        //requestPermissionsCompat(arrayOf(Manifest.permission.CAMERA), PERMISSION_REQUEST_CAMERA)
     }
 
     override fun onRequestPermissionsResult(
@@ -81,11 +85,31 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        //4
     }
 
-    private fun startCamera() {
+    private fun showCamera() {
         val intent = Intent(this, CameraPreviewActivity::class.java)
         startActivity(intent)
     }
+
+    private fun requestCameraPermissions() {
+        return requestPermissionsCompat(
+            arrayOf(Manifest.permission.CAMERA),
+            PERMISSION_REQUEST_CAMERA
+        )
+    }
+
+    private fun repeatMessageAccessCamera() {
+        AlertDialog.Builder(this)
+            .setTitle(TITLE_FOR_USER_ABOUT_PERMISSION_TO_CAMERA)
+            .setMessage(MESSAGE_FOR_USER_ABOUT_PERMISSION_TO_CAMERA)
+            .setPositiveButton(R.string.Ok)
+            { _, _ ->
+                requestCameraPermissions()
+            }.show()
+    }
+
 }
+
+
+
