@@ -18,10 +18,13 @@ package com.example.android.basicpermissions
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.view.View
 import android.widget.Button
 import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -77,6 +80,8 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         //3 -requestPermissionsCompat(arrayOf(Manifest.permission.CAMERA), PERMISSION_REQUEST_CAMERA)
     }
 
+
+
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -92,12 +97,8 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
                         Toast.makeText(applicationContext, "Permission denied", Toast.LENGTH_LONG)
                             .show()
                     } else {
-                        Toast.makeText(
-                            applicationContext,
-                            "TURN ON CAMERA RESOLUTION MANUALLY",
-                            Toast.LENGTH_LONG
-                        ) // хотів індент добавить(на відкриття настройки проложухи) но не хватило ума розыбратися з принципом роботи
-                            .show()
+                        openSetingsApk()
+
                     }
                 }
             }
@@ -107,5 +108,19 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
     private fun startCamera() {
         val intent = Intent(this, CameraPreviewActivity::class.java)
         startActivity(intent)
+    }
+    private fun openSetingsApk() {
+        val runAppSetting = Intent(
+            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+            Uri.fromParts("package", packageName, null)
+        )
+        AlertDialog.Builder(this)
+            .setTitle("Permission denied")
+            .setMessage("You have permanently changed access to the camera. Open app settings to change settings manually?")
+            .setPositiveButton("Ok") { _, _ -> startActivity(runAppSetting) }
+            .setNegativeButton("Cansel") {_, _ -> onBackPressedDispatcher }
+            .create()
+            .show()
+
     }
 }
