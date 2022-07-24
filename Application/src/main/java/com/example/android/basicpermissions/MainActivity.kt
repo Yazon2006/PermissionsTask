@@ -29,13 +29,12 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.example.android.basicpermissions.camera.CameraPreviewActivity
-import com.example.android.basicpermissions.util.checkSelfPermissionCompat
 import com.example.android.basicpermissions.util.requestPermissionsCompat
-import com.example.android.basicpermissions.util.shouldShowRequestPermissionRationaleCompat
 
 const val PERMISSION_REQUEST_CAMERA = 0
 const val MESSAGE_FOR_USER_ABOUT_PERMISSION_TO_CAMERA =
-    "Якщо ви не надасте доступ до камери, то Іванич не зарахує мені домашку.. \uD83D\uDE44"
+    "Sorry, but we can't open this function without your permission to camera \uD83D\uDE44 \n" +
+            "Press \"OK\" for add access by yourself"
 const val TITLE_FOR_USER_ABOUT_PERMISSION_TO_CAMERA = "Доступ до камери"
 
 /**
@@ -68,7 +67,7 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
 
         // Register a listener for the 'Show Camera Preview' button.
         findViewById<Button>(R.id.button_open_camera).setOnClickListener {
-            setupPermissions()
+            requestCameraPermissions()
         }
 
     }
@@ -78,17 +77,34 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         permissions: Array<out String>,
         grantResults: IntArray
     ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        //4
+        when (requestCode) {
+            PackageManager.PERMISSION_GRANTED -> {
+                // If request is cancelled, the result arrays are empty.
+                if ((grantResults.isNotEmpty() &&
+                            grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                ) {
+                    startCamera()
+                } else {
+                    repeatMessageAccessCamera()
+                }
+                return
+            }
+            // Add other 'when' lines to check for other
+            // permissions this app might request.
+            else -> {
+
+            }
+        }
     }
 
     private fun startCamera() {
+
         val intent = Intent(this, CameraPreviewActivity::class.java)
         startActivity(intent)
     }
 
     private fun requestCameraPermissions() {
-        return requestPermissionsCompat(
+        requestPermissionsCompat(
             arrayOf(Manifest.permission.CAMERA),
             PERMISSION_REQUEST_CAMERA
         )
@@ -98,39 +114,23 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         val intent = Intent()
         intent.action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
         val uri = Uri.fromParts(
-            "package", packageName, null)
+            "package", packageName, null
+        )
         intent.data = uri
         startActivity(intent)
     }
+
     private fun repeatMessageAccessCamera() {
         AlertDialog.Builder(this)
             .setTitle(TITLE_FOR_USER_ABOUT_PERMISSION_TO_CAMERA)
             .setMessage(MESSAGE_FOR_USER_ABOUT_PERMISSION_TO_CAMERA)
             .setPositiveButton("OK")
             { _, _ ->
-                requestCameraPermissions()
-            }.show()
-    }
-
-    private fun controlMessageAccessCamera() {
-        AlertDialog.Builder(this)
-            .setTitle(TITLE_FOR_USER_ABOUT_PERMISSION_TO_CAMERA)
-            .setMessage(R.string.intro_message)
-            .setPositiveButton("OK")
-            { _, _ ->
                 showPermRationale()
+            }.setNegativeButton("Cancel")
+            { _,_ ->
+                onBackPressedDispatcher
             }.show()
-    }
-
-    private fun setupPermissions() {
-        val permission = checkSelfPermissionCompat(Manifest.permission.CAMERA)
-
-        if (permission != PackageManager.PERMISSION_GRANTED) {
-            if (shouldShowRequestPermissionRationaleCompat(Manifest.permission.CAMERA)) {
-                repeatMessageAccessCamera()
-            } else {
-                controlMessageAccessCamera()
-            }
-        }
     }
 }
+
