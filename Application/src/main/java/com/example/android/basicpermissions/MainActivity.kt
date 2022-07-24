@@ -15,21 +15,24 @@
 */
 
 package com.example.android.basicpermissions
-
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import android.view.View
 import android.widget.Button
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.example.android.basicpermissions.camera.CameraPreviewActivity
 import com.example.android.basicpermissions.util.checkSelfPermissionCompat
 import com.example.android.basicpermissions.util.requestPermissionsCompat
 import com.example.android.basicpermissions.util.shouldShowRequestPermissionRationaleCompat
-import com.example.android.basicpermissions.util.showSnackbar
-import com.google.android.material.snackbar.Snackbar
+
 
 const val PERMISSION_REQUEST_CAMERA = 0
 
@@ -63,7 +66,42 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
 
         // Register a listener for the 'Show Camera Preview' button.
         findViewById<Button>(R.id.button_open_camera).setOnClickListener {
-            startCamera()
+            if (checkSelfPermissionCompat(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                startCamera()
+            } else {
+                requestPermissionsCompat(                       //запрос дозволу якщо да то запуск
+                    arrayOf(Manifest.permission.CAMERA),
+                    PERMISSION_REQUEST_CAMERA
+                )
+            }
+        }
+        //1 - checkSelfPermissionCompat(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+        //2 - shouldShowRequestPermissionRationaleCompat(Manifest.permission.CAMERA)
+        //3 -requestPermissionsCompat(arrayOf(Manifest.permission.CAMERA), PERMISSION_REQUEST_CAMERA)
+    }
+
+
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        when (requestCode) {
+            PERMISSION_REQUEST_CAMERA -> {
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    startCamera()
+                } else {
+                    if (shouldShowRequestPermissionRationaleCompat(Manifest.permission.CAMERA)) {
+                        Toast.makeText(applicationContext, "Permission denied", Toast.LENGTH_LONG)
+                            .show()
+                    } else {
+                        openSetingsApk()
+
+                    }
+                }
+            }
         }
         //1
         //checkSelfPermissionCompat(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
@@ -87,5 +125,19 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
     private fun startCamera() {
         val intent = Intent(this, CameraPreviewActivity::class.java)
         startActivity(intent)
+    }
+    private fun openSetingsApk() {
+        val runAppSetting = Intent(
+            Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
+            Uri.fromParts("package", packageName, null)
+        )
+        AlertDialog.Builder(this)
+            .setTitle("Permission denied")
+            .setMessage("You have permanently changed access to the camera. Open app settings to change settings manually?")
+            .setPositiveButton("Ok") { _, _ -> startActivity(runAppSetting) }
+            .setNegativeButton("Cansel") {_, _ -> onBackPressedDispatcher }
+            .create()
+            .show()
+
     }
 }
