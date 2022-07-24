@@ -15,21 +15,21 @@
 */
 
 package com.example.android.basicpermissions
-
 import android.Manifest
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.example.android.basicpermissions.camera.CameraPreviewActivity
 import com.example.android.basicpermissions.util.checkSelfPermissionCompat
 import com.example.android.basicpermissions.util.requestPermissionsCompat
 import com.example.android.basicpermissions.util.shouldShowRequestPermissionRationaleCompat
-import com.example.android.basicpermissions.util.showSnackbar
-import com.google.android.material.snackbar.Snackbar
+
 
 const val PERMISSION_REQUEST_CAMERA = 0
 
@@ -63,16 +63,18 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
 
         // Register a listener for the 'Show Camera Preview' button.
         findViewById<Button>(R.id.button_open_camera).setOnClickListener {
-            startCamera()
+            if (checkSelfPermissionCompat(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                startCamera()
+            } else {
+                requestPermissionsCompat(                       //запрос дозволу якщо да то запуск
+                    arrayOf(Manifest.permission.CAMERA),
+                    PERMISSION_REQUEST_CAMERA
+                )
+            }
         }
-        //1
-        //checkSelfPermissionCompat(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
-
-        //2
-        //shouldShowRequestPermissionRationaleCompat(Manifest.permission.CAMERA)
-
-        //3
-        //requestPermissionsCompat(arrayOf(Manifest.permission.CAMERA), PERMISSION_REQUEST_CAMERA)
+        //1 - checkSelfPermissionCompat(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
+        //2 - shouldShowRequestPermissionRationaleCompat(Manifest.permission.CAMERA)
+        //3 -requestPermissionsCompat(arrayOf(Manifest.permission.CAMERA), PERMISSION_REQUEST_CAMERA)
     }
 
     override fun onRequestPermissionsResult(
@@ -81,7 +83,25 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        //4
+        when (requestCode) {
+            PERMISSION_REQUEST_CAMERA -> {
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    startCamera()
+                } else {
+                    if (shouldShowRequestPermissionRationaleCompat(Manifest.permission.CAMERA)) {
+                        Toast.makeText(applicationContext, "Permission denied", Toast.LENGTH_LONG)
+                            .show()
+                    } else {
+                        Toast.makeText(
+                            applicationContext,
+                            "TURN ON CAMERA RESOLUTION MANUALLY",
+                            Toast.LENGTH_LONG
+                        ) // хотів індент добавить(на відкриття настройки проложухи) но не хватило ума розыбратися з принципом роботи
+                            .show()
+                    }
+                }
+            }
+        }
     }
 
     private fun startCamera() {
