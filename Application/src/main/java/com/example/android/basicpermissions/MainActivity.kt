@@ -22,12 +22,16 @@ import android.content.pm.PackageManager
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
+import android.widget.Toast
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import com.example.android.basicpermissions.camera.CameraPreviewActivity
 import com.example.android.basicpermissions.util.checkSelfPermissionCompat
 import com.example.android.basicpermissions.util.requestPermissionsCompat
 import com.example.android.basicpermissions.util.shouldShowRequestPermissionRationaleCompat
+import androidx.fragment.app.DialogFragment
 import com.example.android.basicpermissions.util.showSnackbar
 import com.google.android.material.snackbar.Snackbar
 
@@ -63,16 +67,26 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
 
         // Register a listener for the 'Show Camera Preview' button.
         findViewById<Button>(R.id.button_open_camera).setOnClickListener {
-            startCamera()
+
+            when {
+                checkSelfPermissionCompat(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED -> {
+                    startCamera()
+                }
+                checkSelfPermissionCompat(Manifest.permission.CAMERA) == PackageManager.PERMISSION_DENIED -> {
+                    val b = shouldShowRequestPermissionRationaleCompat(Manifest.permission.CAMERA)
+                    if (b)  {
+                    val text = "для продовження роботи потрібно надати доступ до камери"
+                    val duration = Toast.LENGTH_SHORT
+                    val toast = Toast.makeText(applicationContext, text, duration)
+                    toast.show()
+                    }
+                    requestPermissionsCompat(arrayOf(Manifest.permission.CAMERA), PERMISSION_REQUEST_CAMERA)
+                }
+
+            }
+
         }
-        //1
-        //checkSelfPermissionCompat(Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED
 
-        //2
-        //shouldShowRequestPermissionRationaleCompat(Manifest.permission.CAMERA)
-
-        //3
-        //requestPermissionsCompat(arrayOf(Manifest.permission.CAMERA), PERMISSION_REQUEST_CAMERA)
     }
 
     override fun onRequestPermissionsResult(
@@ -81,7 +95,16 @@ class MainActivity : AppCompatActivity(), ActivityCompat.OnRequestPermissionsRes
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        //4
+
+        if ((grantResults.isNotEmpty() &&
+                    grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
+            startCamera()
+        } else {
+            val text = "доступ до камери заборонений.продовження неможливе. потрібно надати доступ..."
+            val duration = Toast.LENGTH_SHORT
+            val toast = Toast.makeText(applicationContext, text, duration)
+            toast.show()
+        }
     }
 
     private fun startCamera() {
